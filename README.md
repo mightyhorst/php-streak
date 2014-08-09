@@ -1,6 +1,6 @@
 ##php-streak
-==========
 A thin wrapper for building queries for Google Streak. All responses are returned in JSON, so no parsing is taking place, yet. 
+==========
 ###Start:
 ```php
 $streak = new Streak('your_api_key_here');
