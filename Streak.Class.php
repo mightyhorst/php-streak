@@ -11,7 +11,7 @@ class Streak {
 
 		$this->_streak_token = $key;
 	}
-	private function getData($url, $username, $password) {
+	private function verbData($verb, $url, $username, $password, $additional) {
 		$ch = curl_init();
 		$timeout = 5;
 		curl_setopt($ch, CURLOPT_URL, 
@@ -22,120 +22,66 @@ class Streak {
 			$timeout);
 		curl_setopt($ch, CURLOPT_USERPWD,
 			"$username:$password");
+		switch($verb) {
+			case "POST":
+				$fields = json_encode($additional);
+				curl_setopt($ch, CURLOPT_CUSTOMREQUEST,
+				"POST");
+				curl_setopt($ch, CURLOPT_POSTFIELDS,
+					$fields);
+				curl_setopt($ch, CURLOPT_HTTPHEADER, 
+					array('Content-Type: application/json'));
+				break;
+			case "GET":
+				break;
+			case "DELETE":
+				curl_setopt($ch, CURLOPT_CUSTOMREQUEST,
+				"DELETE");
+				break;
+			case "PUT":
+				$fields_string = '';
+				foreach($additional as $key=>$value) { $fields_string .= $key.'='.$value.'&'; }
+				rtrim($fields_string, '&');
+				curl_setopt($ch, CURLOPT_CUSTOMREQUEST,
+				"POST");
+				curl_setopt($ch,CURLOPT_POST,
+					count($fields));
+				curl_setopt($ch,CURLOPT_POSTFIELDS,
+					$fields_string);
+				curl_setopt($ch, CURLOPT_HTTPHEADER, 
+					array('Content-Type: application/json'));
+				break;
+			default:
+				break;
+		}
 		$data = curl_exec($ch);
 		curl_close($ch);
 		return $data;
 	}
-	private function postData($url, $fields, $username, $password) {
-		$ch = curl_init();
-		$timeout = 5;
-		$fields = json_encode($fields);
-		curl_setopt($ch, CURLOPT_URL, 
-			$url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 
-			1);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 
-			$timeout);
-		curl_setopt($ch, CURLOPT_CUSTOMREQUEST,
-			"POST");
-		curl_setopt($ch, CURLOPT_POSTFIELDS,
-			$fields);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, 
-			array('Content-Type: application/json'));
-		curl_setopt($ch, CURLOPT_USERPWD,
-			"$username:$password");
-		$data = curl_exec($ch);
-		curl_close($ch);
-		return $data;
-	}
-	private function putData($url, $fields, $username, $password) {
-		$ch = curl_init();
-		$timeout = 5;
-		$fields_string = '';
-		foreach($fields as $key=>$value) { $fields_string .= $key.'='.$value.'&'; }
-		rtrim($fields_string, '&');
-
-		curl_setopt($ch, CURLOPT_URL, 
-			$url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 
-			1);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 
-			$timeout);
-		curl_setopt($ch, CURLOPT_CUSTOMREQUEST,
-			"POST");
-		curl_setopt($ch,CURLOPT_POST,
-			count($fields));
-		curl_setopt($ch,CURLOPT_POSTFIELDS,
-			$fields_string);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, 
-			array('Content-Type: application/json'));
-		curl_setopt($ch, CURLOPT_USERPWD,
-			"$username:$password");
-		$data = curl_exec($ch);
-		curl_close($ch);
-		return $data;
-		
-	}
-	private function deleteData($url, $username, $password) {
-		$ch = curl_init();
-		$timeout = 5;
-		curl_setopt($ch, CURLOPT_URL, 
-			$url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 
-			1);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 
-			$timeout);
-		curl_setopt($ch, CURLOPT_CUSTOMREQUEST,
-			"DELETE");
-		curl_setopt($ch, CURLOPT_USERPWD,
-			"$username:$password");
-		$data = curl_exec($ch);
-		curl_close($ch);
-		return $data;
+	private function getQuery() {
+		if($this->method_key != '') {
+			$this->method = $this->method."/";
+		}
+		if($this->submethod != '' && $this->submethod_key != '') {
+			$this->submethod = $this->submethod."/";
+		}
+		return $this->_streak_API.$this->method.$this->method_key.$this->submethod.$this->submethod_key;
 	}
 	//verbs
 	public function get() {
-		if($this->method_key != '') {
-			$this->method = $this->method."/";
-		}
-		if($this->submethod != '' && $this->submethod_key != '') {
-			$this->submethod = $this->submethod."/";
-		}
-		$url = $this->_streak_API.$this->method.$this->method_key.$this->submethod.$this->submethod_key;
-		$return_data = $this->getData($url, $this->_streak_token, "");
+		$return_data = $this->verbData("GET",$this->getQuery(), $this->_streak_token, "", "");
 		return $return_data;
 	}
 	public function post($post) {
-		if($this->method_key != '') {
-			$this->method = $this->method."/";
-		}
-		if($this->submethod != '' && $this->submethod_key != '') {
-			$this->submethod = $this->submethod."/";
-		}
-		$url = $this->_streak_API.$this->method.$this->method_key.$this->submethod.$this->submethod_key;
-		$return_data = $this->postData($url, $post, $this->_streak_token, "");
+		$return_data = $this->verbData("POST",$this->getQuery(), $this->_streak_token, "", $post);
 		return $return_data;
 	}
 	public function put($put) {
-		if($this->method_key != '') {
-			$this->method = $this->method."/";
-		}
-		if($this->submethod != '' && $this->submethod_key != '') {
-			$this->submethod = $this->submethod."/";
-		}
-		$url = $this->_streak_API.$this->method.$this->method_key.$this->submethod.$this->submethod_key;
-		$return_data = $this->putData($url, $put, $this->_streak_token, "");
+		$return_data = $this->verbData("PUT",$this->getQuery(), $this->_streak_token, "", $put);
 		return $return_data;
 	}
 	public function delete() {
-		if($this->method_key != '') {
-			$this->method = $this->method."/";
-		}
-		if($this->submethod != '' && $this->submethod_key != '') {
-			$this->submethod = $this->submethod."/";
-		}
-		$url = $this->_streak_API.$this->method.$this->method_key.$this->submethod.$this->submethod_key;
-		$return_data = $this->getData($url, $this->_streak_token, "");
+		$return_data = $this->verbData("DELETE",$this->getQuery(), $this->_streak_token, "", "");
 		return $return_data;
 	}
 	//methods
