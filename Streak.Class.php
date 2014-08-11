@@ -45,7 +45,7 @@ class Streak {
 				curl_setopt($ch, CURLOPT_CUSTOMREQUEST,
 				"POST");
 				curl_setopt($ch,CURLOPT_POST,
-					count($fields));
+					count($additional));
 				curl_setopt($ch,CURLOPT_POSTFIELDS,
 					$fields_string);
 				curl_setopt($ch, CURLOPT_HTTPHEADER, 
